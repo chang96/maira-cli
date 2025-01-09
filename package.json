@@ -2,6 +2,15 @@
   "name": "maira-cli",
   "version": "1.0.0",
   "main": "index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "bin": {
+    "maira-cli": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.10.5",

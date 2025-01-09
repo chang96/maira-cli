@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
-    "outDir": "lib",
+    "outDir": "dist",
     "sourceMap": true,
     "strict": true,
     "skipLibCheck": true 
@@ -14,5 +14,4 @@
   "compileOnSave": true,
   "include": ["src", "src/config"],
   "exclude": ["node_modules"],
-  "files":["src/types/types.d.ts"]
 }
