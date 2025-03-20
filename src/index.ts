@@ -6,7 +6,8 @@ import { generateDocs } from "./utils/makeRequest";
 import http from "http"
 import express from "express"
 import bodyParser from "body-parser";
-// import axios from "axios";
+import axios from "axios"
+import {configTemplate} from "./templates.json"
 const mairaPort = 8081;
 const app = express()
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -62,6 +63,17 @@ app.use((req, res, next) => {
         type: "number",
         alias: "p",
         demandOption: true
+      }).option("project", {
+        describe: "The project name eg admin-endponts-documentation",
+        type: "string",
+        alias: "project",
+        demandOption: true
+      })
+      .option("baseurl", {
+        describe: "The base url eg http://localhost:3000",
+        type: "string",
+        alias: "url",
+        demandOption: false
       })
     }).help().argv;
 
@@ -77,26 +89,44 @@ app.use((req, res, next) => {
         await writeDataToFile(writePath, JSON.stringify(data, null, "\t"))
         console.log(`Documentation generated and saved to ${writePath}. Preview: https://maira-virid.vercel.app/?id=${jsonId}`)
     }
-    if (argv._[0] == "http"){
-      const {port} = argv
-      // const targetUrl = 'http://localhost:'+port;
-      app.all("*", async function(req, res){
-        const {method, path, headers, body, query, params, url} = req
-        console.log({
-          method,
-          url: url+path,
-          headers,
-          data: body,
-          query,
-          params,
-        })
-        res.status(200).send("ok")
-      })
-      const server = http.createServer(app)
-      server.listen(mairaPort, ()=> {
-        console.log("forwarding requests from port ", mairaPort)
-      })
-      console.log("forwarding requests to http://localhost:"+port)
+   
+  if (argv._[0] == "http") {
+    const { port, project, baseurl } = argv;
+    const newProjectPath = "./maira_docs"
+    await createDirectoryIfNotExists(newProjectPath as string)
+    await createDirectoryIfNotExists(newProjectPath+"/"+project)
+    configTemplate["title"] = project + " documentation"
+    await writeDataToFile(newProjectPath+"/"+project+"/config.json", JSON.stringify(configTemplate, null, "\t"))
+    await writeDataToFile(newProjectPath+"/"+project+"/paths.json", JSON.stringify({endpoints: []}, null, "\t"))
+    
+    let targetUrl = `http://localhost:${port}`;
+    if (baseurl){
+      targetUrl = baseurl as string
     }
+
+    app.all("*", async (req, res) => {
+      try {
+        const response = await axios({
+          method: req.method,
+          url: `${targetUrl}${req.path}`,
+          data: req.body,
+          headers: { ...req.headers },
+          params: req.query,
+        });
+
+        res.status(response.status).send(response.data);
+      } catch (error: any) {
+        console.error("Axios Proxy Error:", error.message);
+        res.status(error.response?.status || 500).send(error.response?.data || "Proxy Error");
+      }
+    });
+
+    const server = http.createServer(app);
+    server.listen(mairaPort, () => {
+      console.log(`Proxy server running on port ${mairaPort}, forwarding requests to ${targetUrl}`);
+    });
+  }
     
 })();
+
+

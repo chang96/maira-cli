@@ -25,8 +25,10 @@ export async function createDirectoryIfNotExists(directoryPath: string) {
 
 export async function writeDataToFile(filePath: string, data: any) {
     try {
-      await fs.writeFile(filePath, data, 'utf8');
-    } catch (err) {
-      console.error('Error writing to file:', err);
+      await fs.stat(filePath)
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        await fs.writeFile(filePath, data, 'utf8');
+      }
     }
   }

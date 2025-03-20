@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "buildl": "tsc & npm link"
   },
   "bin": {
     "maira-cli": "./dist/index.js"
@@ -24,6 +25,7 @@
     "body-parser": "^1.20.3",
     "express": "^4.21.2",
     "http-proxy": "^1.18.1",
+    "proxy": "^2.2.0",
     "uuid": "^11.0.4",
     "yargs": "^17.7.2"
   }
