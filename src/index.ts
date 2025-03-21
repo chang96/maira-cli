@@ -7,7 +7,7 @@ import http from "http"
 import express from "express"
 import bodyParser from "body-parser";
 import axios from "axios"
-import {configTemplate} from "./templates.json"
+import {configTemplate, swaggerTemplate} from "./templates.json"
 const mairaPort = 8081;
 const app = express()
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -105,6 +105,36 @@ app.use((req, res, next) => {
     }
 
     app.all("*", async (req, res) => {
+      //read the config and paths file
+      //find the paths that is being called
+      //if found update
+      //if not found create a new on in the paths file
+      //generate tags from routes list in config file
+      const localMairaConfigs = await readJSON(newProjectPath+"/"+project+"/config.json")
+      swaggerTemplate["info"]["title"] = localMairaConfigs.title
+      swaggerTemplate["info"]["version"] = localMairaConfigs.version
+      swaggerTemplate["tags"] = localMairaConfigs.routes.map((route: string) => ({name: route.split("/")[1], description: "" }))
+      swaggerTemplate["servers"] = localMairaConfigs.serverUrls.map((server: string) => ({url: server}))
+      const secSchemeRes = {} as any
+
+      for (const k in localMairaConfigs.security) {
+        const secRes = {} as any
+        const secs = localMairaConfigs.security[k]
+        for (const sec of secs) {
+          secRes[sec] = []
+          secSchemeRes[sec] = {
+            type: k,
+            ...(k === "apiKey" && {in: "header", name: sec}),
+            ...(k === "http" && {bearerFormat: "JWT", scheme: "bearer"})
+          }
+        }
+        (swaggerTemplate["security"] as any[]).push(secRes)
+      }
+
+      
+      (swaggerTemplate["components"]["securitySchemes"] as any[]) = secSchemeRes
+      await writeDataToFile(newProjectPath+"/"+project+"/swagger_template.json", JSON.stringify(swaggerTemplate, null, "\t"))
+
       try {
         const response = await axios({
           method: req.method,
@@ -113,7 +143,7 @@ app.use((req, res, next) => {
           headers: { ...req.headers },
           params: req.query,
         });
-
+        
         res.status(response.status).send(response.data);
       } catch (error: any) {
         console.error("Axios Proxy Error:", error.message);

@@ -1,6 +1,7 @@
 {
   "configTemplate": {
     "title": "",
+    "version": "",
     "serverUrls": [],
     "routes": [],
     "security": [],
@@ -9,14 +10,41 @@
 		"/ping",
 		"/ping/:id"
 	],
-	"securityExample": [
-		"x-api-key",
-		"x-api-user",
-		"authorization"
-	],
+	"securityExample": {
+		"apiKey": ["x-api-key", "x-api-user"],
+		"http": ["authorization"]
+    },
 	"_comment1" : "List all the endpoints to be documented",
 	"_comment2" : "If an endpoint has a parameter, use the colon ':' to indicate the parameter as in routesExample[2]",
 	"_comment3" : "List all the supported base urls in serverUrls",
 	"_comment4" : "List all the supported security headers"
-  }
+  },
+  "swaggerTemplate": {
+	"openapi": "3.0.3",
+	"info": {
+		"title":   "",
+		"version": ""
+	},
+	"servers": [],
+	"paths": {},
+	"components": {
+		"schemas": {
+			"BaseResponse": {
+				"type": "object",
+				"properties": {
+					"data": {
+						"type": "object"
+					},
+					"message": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"securitySchemes": {}
+	},
+	"security": [],
+	"tags": []
+}
+
 }
