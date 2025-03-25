@@ -15,7 +15,7 @@
 		"http": ["authorization"],
 		"_comment1": "only apikey and http methods are supported"
     },
-	"_comment1" : "List all the endpoints to be documented",
+	"_comment1" : "List all the endpoints to be documented in routes",
 	"_comment2" : "If an endpoint has a parameter, use the colon ':' to indicate the parameter as in routesExample[2]",
 	"_comment3" : "List all the supported base urls in serverUrls",
 	"_comment4" : "List all the supported security headers"
