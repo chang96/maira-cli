@@ -4,7 +4,7 @@
     "version": "",
     "serverUrls": [],
     "routes": [],
-    "security": [],
+    "security": {},
     "routesExample": [
 		"/ping/pong",
 		"/ping",
@@ -12,7 +12,8 @@
 	],
 	"securityExample": {
 		"apiKey": ["x-api-key", "x-api-user"],
-		"http": ["authorization"]
+		"http": ["authorization"],
+		"_comment1": "only apikey and http methods are supported"
     },
 	"_comment1" : "List all the endpoints to be documented",
 	"_comment2" : "If an endpoint has a parameter, use the colon ':' to indicate the parameter as in routesExample[2]",
@@ -45,6 +46,21 @@
 	},
 	"security": [],
 	"tags": []
-}
+},
+  "pathsTemplates": {
+		"name": "",
+		"path": "",
+		"method": "",
+		"summary": "",
+		"operationId": "",
+		"tags": [],
+		"description": "",
+		"requestParams": [],
+		"requestQueries": [],
+		"requestBody": null,
+		"requestBodyDetails": [],
+		"authd": {},
+		"responses": []
+	  }
 
 }
