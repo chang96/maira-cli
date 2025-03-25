@@ -88,7 +88,7 @@ app.use((_req, _res, next) => {
         const res = await generateDocs(pathsData, configData)
         const {data, id: jsonId} = res
         const writePath = (output as string) +"/"+ (name as string)
-        await writeDataToFile(writePath, JSON.stringify(data, null, "\t"))
+        await writeDataToFile(writePath, JSON.stringify(data, null, "\t"), true)
         console.log(`Documentation generated and saved to ${writePath}. Preview: https://maira-virid.vercel.app/?id=${jsonId}`)
     }
    
