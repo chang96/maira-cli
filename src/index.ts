@@ -202,7 +202,7 @@ app.use((_req, _res, next) => {
         requestQueries: [],
         requestBody: null,
         requestBodyDetails: [],
-        authd: {},
+        authd: {use: false, position: 0, positions: []},
         responses: [
           {
             code: response.status.toString(),
@@ -217,6 +217,7 @@ app.use((_req, _res, next) => {
       
       if (securities.length > 0) {
         // const definedSecurities = 
+        
         const headers = req.headers
         for (const secType in localMairaConfigs.security){
           const availabeSecurities = {} as Record<string, any>
