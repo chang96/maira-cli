@@ -1,11 +1,11 @@
 {
   "name": "maira-cli",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "index.js",
   "repository": {
-  "type": "git",
-  "url": "https://github.com/chang96/maira-cli"
-},
+    "type": "git",
+    "url": "https://github.com/chang96/maira-cli"
+  },
   "scripts": {
     "build": "tsc",
     "buildl": "tsc & npm link"
