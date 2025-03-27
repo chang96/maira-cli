@@ -295,7 +295,9 @@ app.use((_req, _res, next) => {
 
         endpoints.push(endpointData);
       }
-      await writeDataToFile(newProjectPath+"/"+project+"/paths.json", JSON.stringify({endpoints}, null, "\t"), true)
+      if ( usePathParams.length == 0 && !normalRoutes.includes(req.path) ) {
+        console.log( "unable to document" + req.path + "because it not found in routes" )
+      } else await writeDataToFile(newProjectPath+"/"+project+"/paths.json", JSON.stringify({endpoints}, null, "\t"), true)
 
     });
 
