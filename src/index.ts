@@ -9,7 +9,7 @@ import bodyParser from "body-parser";
 import axios from "axios"
 import {configTemplate, swaggerTemplate as oldSwaggerTemplate, pathsTemplates} from "./templates.json"
 import deepEqual from "deep-equal"
-const swaggerTemplate = JSON.parse(JSON.stringify(oldSwaggerTemplate))
+const swaggerTemplate = {...oldSwaggerTemplate} //JSON.parse(JSON.stringify(oldSwaggerTemplate))
 const mairaPort = 8081;
 const app = express()
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use((_req, _res, next) => {
   // console.log('Request Method:', req.method);
-  // console.log('Request Path:', req.path);
+  // console.log('Request Path:', getPath);
   // console.log('Request Body:', req.body);
   // console.log('Request Query:', req.query);
   // console.log('Request Params:', req.params);
@@ -100,11 +100,13 @@ app.use((_req, _res, next) => {
     configTemplate["title"] = project + " documentation"
     await writeDataToFile(newProjectPath+"/"+project+"/config.json", JSON.stringify(configTemplate, null, "\t"))
     await writeDataToFile(newProjectPath+"/"+project+"/paths.json", JSON.stringify({endpoints: []}, null, "\t"))
-    
+    let changePath = false
     let targetUrl = `http://localhost:${port}`;
     if (baseurl){
       targetUrl = baseurl as string
+      changePath = true
     }
+
 
     app.all("*", async (req, res) => {
       //read the config and paths file
@@ -112,10 +114,23 @@ app.use((_req, _res, next) => {
       //if found update
       //if not found create a new on in the paths file
       //generate tags from routes list in config file
+      let getPath = req.path
+
+      const splitedTarget = (targetUrl+getPath).split("/")
+      const useUrl = [] as string[]
+      for (let i=0; i<splitedTarget.length; i++) {
+        const x = splitedTarget[i]
+        if (!useUrl.includes(x)) useUrl.push(x)
+      }
+      const newUrl = useUrl.join("/")
+      const newPath = newUrl.split(targetUrl)[1]
+      if(changePath){
+        getPath = newPath
+      }
       const localMairaConfigs = await readJSON(newProjectPath+"/"+project+"/config.json")
       const localMairaPaths = await readJSON(newProjectPath+"/"+project+"/paths.json")
       const {endpoints} = localMairaPaths
-      let matchedRoute = req.path;
+      let matchedRoute = getPath;
       const normalRoutes = localMairaConfigs.routes.filter((r:string) => !r.includes(":"));
       const paramRoutes = localMairaConfigs.routes.filter((r:string)=> r.includes(":"));
       
@@ -128,11 +143,11 @@ app.use((_req, _res, next) => {
 
       let pathParams = {};
   
-      if (!normalRoutes.includes(req.path)) {
+      if (!normalRoutes.includes(getPath)) {
         for (const route of paramRoutes) {
           const paramNames = route.match(/:(\w+)/g) || [];
           const regex = new RegExp(`^${route.replace(/:(\w+)/g, "(\\w+)")}$`);
-          const match = req.path.match(regex);
+          const match = getPath.match(regex);
           
           if (match) {
             matchedRoute = route;
@@ -151,7 +166,9 @@ app.use((_req, _res, next) => {
 
       swaggerTemplate["info"]["title"] = localMairaConfigs.title
       swaggerTemplate["info"]["version"] = localMairaConfigs.version
-      swaggerTemplate["tags"] = localMairaConfigs.routes.map((route: string) => ({name: route.split("/")[1], description: "" }))
+      swaggerTemplate.tags = []
+      const rmRepeatedTags = [ ...new Set(localMairaConfigs.routes.map((x:string) => x.split("/")[1]))] as Array<string>
+      swaggerTemplate["tags"] = rmRepeatedTags.map((route: string) => ({name: route, description: "" })) as any
       swaggerTemplate["servers"] = localMairaConfigs.serverUrls.map((server: string) => ({url: server}))
       const secSchemeRes = {} as any
 
@@ -173,10 +190,11 @@ app.use((_req, _res, next) => {
       (swaggerTemplate["components"]["securitySchemes"] as any[]) = secSchemeRes
       await writeDataToFile(newProjectPath+"/"+project+"/swagger_template.json", JSON.stringify(swaggerTemplate, null, "\t"), true)
       let response 
+  
       try {
         response = await axios({
           method: req.method,
-          url: `${targetUrl}${req.path}`,
+          url: newUrl,
           data: req.body,
           headers: { ...req.headers },
           params: req.query,
@@ -191,13 +209,13 @@ app.use((_req, _res, next) => {
 
 
       const endpointData = {
-        name: req.path.toLowerCase(),
+        name: getPath.toLowerCase(),
         path: matchedRoute.toLowerCase(),
         method: req.method.toLowerCase(),
-        summary: `Auto-generated doc for ${req.method} ${req.path}`,
+        summary: `Auto-generated doc for ${req.method} ${getPath}`,
         operationId: endpointId.toLowerCase(),
         tags: [matchedRoute.split("/")[1].toLowerCase() || "default"],
-        description: `Endpoint documentation for ${req.method} ${req.path}`,
+        description: `Endpoint documentation for ${req.method} ${getPath}`,
         requestParams: usePathParams,
         requestQueries: [],
         requestBody: null,
@@ -295,8 +313,8 @@ app.use((_req, _res, next) => {
 
         endpoints.push(endpointData);
       }
-      if ( usePathParams.length == 0 && !normalRoutes.includes(req.path) ) {
-        console.log( "unable to document" + req.path + "because it not found in routes" )
+      if ( usePathParams.length == 0 && !normalRoutes.includes(getPath) ) {
+        console.log( "unable to document " + getPath + " because it not found in routes" )
       } else await writeDataToFile(newProjectPath+"/"+project+"/paths.json", JSON.stringify({endpoints}, null, "\t"), true)
 
     });
