@@ -9,18 +9,13 @@ import bodyParser from "body-parser";
 import axios from "axios"
 import {configTemplate, swaggerTemplate as oldSwaggerTemplate, pathsTemplates} from "./templates.json"
 import deepEqual from "deep-equal"
-const swaggerTemplate = {...oldSwaggerTemplate} //JSON.parse(JSON.stringify(oldSwaggerTemplate))
+const swaggerTemplate = {...oldSwaggerTemplate}
 const mairaPort = 8081;
 const app = express()
 app.use(bodyParser.urlencoded({ extended: false }))
 
 app.use(bodyParser.json())
 app.use((_req, _res, next) => {
-  // console.log('Request Method:', req.method);
-  // console.log('Request Path:', getPath);
-  // console.log('Request Body:', req.body);
-  // console.log('Request Query:', req.query);
-  // console.log('Request Params:', req.params);
   next();
 });
 
@@ -77,6 +72,12 @@ app.use((_req, _res, next) => {
         alias: "url",
         demandOption: false
       })
+      .option("all", {
+        describe: "This option allows all endpoints to be documented. Note that all endpoints with parameters are documented separately",
+        type: "boolean",
+        alias: "a",
+        demandOption: false
+      })
     }).help().argv;
 
     if (argv._[0] == "generate" ){
@@ -93,7 +94,7 @@ app.use((_req, _res, next) => {
     }
    
   if (argv._[0] == "http") {
-    const { port, project, baseurl } = argv;
+    const { port, project, baseurl, all} = argv;
     const newProjectPath = "./maira_docs"
     await createDirectoryIfNotExists(newProjectPath as string)
     await createDirectoryIfNotExists(newProjectPath+"/"+project)
@@ -313,7 +314,9 @@ app.use((_req, _res, next) => {
 
         endpoints.push(endpointData);
       }
-      if ( usePathParams.length == 0 && !normalRoutes.includes(getPath) ) {
+      if (all){
+        await writeDataToFile(newProjectPath+"/"+project+"/paths.json", JSON.stringify({endpoints}, null, "\t"), true)
+      } else if ( usePathParams.length == 0 && !normalRoutes.includes(getPath) ) {
         console.log( "unable to document " + getPath + " because it not found in routes" )
       } else await writeDataToFile(newProjectPath+"/"+project+"/paths.json", JSON.stringify({endpoints}, null, "\t"), true)
 
