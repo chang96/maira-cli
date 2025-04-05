@@ -86,7 +86,7 @@ app.use((_req, _res, next) => {
         const configData = await readJSON(config as string);
         const pathsData = await readJSON(paths as string);
         await createDirectoryIfNotExists(output as string)
-        const res = await generateDocs(pathsData, configData)
+        const res = await generateDocs(pathsData, configData, id as string)
         const {data, id: jsonId} = res
         const writePath = (output as string) +"/"+ (name as string)
         await writeDataToFile(writePath, JSON.stringify(data, null, "\t"), true)
