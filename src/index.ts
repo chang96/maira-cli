@@ -173,6 +173,7 @@ app.use((_req, _res, next) => {
       swaggerTemplate["servers"] = localMairaConfigs.serverUrls.map((server: string) => ({url: server}))
       const secSchemeRes = {} as any
 
+      let secArrResult: any[] = []
       for (const k in localMairaConfigs.security) {
         const secRes = {} as any
         const secs = localMairaConfigs.security[k]
@@ -184,8 +185,9 @@ app.use((_req, _res, next) => {
             ...(k === "http" && {bearerFormat: "JWT", scheme: "bearer"})
           }
         }
-        (swaggerTemplate["security"] as any[]).push(secRes)
+        secArrResult.push(secRes)
       }
+      (swaggerTemplate["security"] as any[]) = secArrResult;
 
       
       (swaggerTemplate["components"]["securitySchemes"] as any[]) = secSchemeRes
